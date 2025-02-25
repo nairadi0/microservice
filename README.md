@@ -8,3 +8,5 @@ coordinates = get_coordinates(zipcode)
 print(f"Coordinates for ZIP code {zipcode}: {coordinates}")
 
 example output: Coordinates for ZIP code 10001: (40.712776, -74.005974)
+![image](https://github.com/user-attachments/assets/22d63f2d-db03-4223-91e2-db4f48dbccc0)
+
