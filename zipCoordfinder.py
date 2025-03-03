@@ -21,5 +21,12 @@ def _fetch_coordinates_data(zipcode, country):
         print(f"Error fetching coordinates: {e}")
         return None
 
+def _parse_coordinates(data):
+    if data and isinstance(data, list) and len(data) > 0:
+        return float(data[0]["lat"]), float(data[0]["lon"])
+    return None
 
+def get_coordinates(zipcode, country="US"):
+    data = _fetch_coordinates_data(zipcode, country)
+    return _parse_coordinates(data)
 
