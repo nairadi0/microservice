@@ -1,32 +1,42 @@
+from flask import Flask, request, jsonify
+from flask_cors import CORS
 import requests
 
-USER_AGENT = "ZipLookup/1.0"
-NOMINATIM_URL = "https://nominatim.openstreetmap.org/search"
+app = Flask(__name__)
+CORS(app, resources={r"/get-coordinates": {"origins": "*"}}) 
 
-def _fetch_coordinates_data(zipcode, country):
+def get_coordinates(zipcode, country="US"):
+    url = "https://nominatim.openstreetmap.org/search"
     params = {
         "postalcode": zipcode,
         "country": country,
         "format": "json"
     }
     headers = {
-        "User-Agent": USER_AGENT
+        "User-Agent": "ZipLookup/1.0"
     }
 
-    try:
-        response = requests.get(NOMINATIM_URL, params=params, headers=headers)
-        response.raise_for_status()  
-        return response.json()
-    except requests.RequestException as e:
-        print(f"Error fetching coordinates: {e}")
-        return None
+    response = requests.get(url, params=params, headers=headers)
 
-def _parse_coordinates(data):
-    if data and isinstance(data, list) and len(data) > 0:
-        return float(data[0]["lat"]), float(data[0]["lon"])
-    return None
+    if response.status_code == 200:
+        data = response.json()
+        if data:
+            lat = data[0]["lat"]
+            lon = data[0]["lon"]
+            return {"lat": float(lat), "lon": float(lon)}
+        else:
+            return {"error": "No results found"}
+    else:
+        return {"error": f"Error: {response.status_code}"}
 
-def get_coordinates(zipcode, country="US"):
-    data = _fetch_coordinates_data(zipcode, country)
-    return _parse_coordinates(data)
+@app.route("/get-coordinates", methods=["GET"])
+def get_zip_coordinates():
+    zipcode = request.args.get("zipcode")
+    if not zipcode:
+        return jsonify({"error": "ZIP code is required"}), 400
 
+    coordinates = get_coordinates(zipcode)
+    return jsonify(coordinates)
+
+if __name__ == "__main__":
+    app.run(debug=True, port=5001)
