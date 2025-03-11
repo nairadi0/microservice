@@ -1,4 +1,10 @@
+
+from flask import Flask, request, jsonify
+from flask_cors import CORS
 import requests
+
+app = Flask(__name__)
+CORS(app, resources={r"/get-coordinates": {"origins": "*"}}) 
 
 def get_coordinates(zipcode, country="US"):
     url = "https://nominatim.openstreetmap.org/search"
@@ -18,6 +24,7 @@ def get_coordinates(zipcode, country="US"):
         if data:
             lat = data[0]["lat"]
             lon = data[0]["lon"]
+
             return float(lat), float(lon)
         else:
             return "No results found"
@@ -25,6 +32,14 @@ def get_coordinates(zipcode, country="US"):
         return f"Error: {response.status_code}"
 
 # Example usage
-zipcode = "97006"
-coordinates = get_coordinates(zipcode)
-print(f"Coordinates for ZIP code {zipcode}: {coordinates}")
+@app.route("/get-coordinates", methods=["GET"])
+def get_zip_coordinates():
+    zipcode = request.args.get("zipcode")
+    if not zipcode:
+        return jsonify({"error": "ZIP code is required"}), 400
+
+    coordinates = get_coordinates(zipcode)
+    return jsonify(coordinates)
+
+if __name__ == "__main__":
+    app.run(debug=True, port=5001)
